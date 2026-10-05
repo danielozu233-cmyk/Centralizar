@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centralizador de Enlaces - UPANA (Cloud)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK (Modular v10) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // Configuración de tu Firebase (Aislado en la colección upana_central_enlaces)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCKRB49LOhaR79NI8CwypqCMf_10GHd77k",
+            authDomain: "reports-e956a.firebaseapp.com",
+            projectId: "reports-e956a",
+            storageBucket: "reports-e956a.firebasestorage.app",
+            messagingSenderId: "1058914487818",
+            appId: "1:1058914487818:web:ef0e53d4a400cb85a199f3",
+            measurementId: "G-XB6QQR984G"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Exponer funciones globales para la app
+        window.db = db;
+        window.collection = collection;
+        window.getDocs = getDocs;
+        window.doc = doc;
+        window.setDoc = setDoc;
+        window.deleteDoc = deleteDoc;
+
+        // Disparar carga inicial una vez cargado Firebase
+        window.dispatchEvent(new Event('firebase-ready'));
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- ================= VISTA DE LOGIN ================= -->
+    <div id="loginView" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 border border-slate-100">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 text-blue-600 text-2xl mb-4 shadow-inner">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-slate-900">Portal UPANA (Cloud)</h1>
+                <p class="text-sm text-slate-500 mt-1">Sincronizado con Firebase</p>
+            </div>
+            <form id="loginForm" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">Usuario</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400"><i class="fa-solid fa-user"></i></span>
+                        <input type="text" id="userInput" required class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 transition" placeholder="Ej. AdminUpana">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">Contraseña</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400"><i class="fa-solid fa-lock"></i></span>
+                        <input type="password" id="passInput" required class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 transition" placeholder="••••••••••">
+                    </div>
+                </div>
+                <div id="loginError" class="hidden text-xs text-red-500 font-medium text-center bg-red-50 py-2 rounded-lg">Usuario o contraseña incorrectos</div>
+                <button type="submit" class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-600/25 transition duration-200">
+                    Iniciar Sesión
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= VISTA PRINCIPAL ================= -->
+    <div id="appView" class="hidden flex-1 flex flex-col">
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-blue-600/20">
+                        U
+                    </div>
+                    <div>
+                        <span class="font-bold text-slate-900 text-lg block leading-tight">Centralizador UPANA Cloud</span>
+                        <span class="text-xs text-slate-500">Datos seguros en Firebase (`reports-e956a`)</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button onclick="openFolderModal()" class="inline-flex items-center space-x-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-4 py-2.5 rounded-xl transition">
+                        <i class="fa-solid fa-folder-plus text-blue-600"></i>
+                        <span>Nueva Carpeta</span>
+                    </button>
+                    <button onclick="openLinkModal()" class="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-sm transition">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Nuevo Vínculo</span>
+                    </button>
+                    <div class="h-6 w-px bg-slate-200 mx-1"></div>
+                    <button onclick="logout()" class="text-slate-400 hover:text-red-600 p-2 rounded-lg transition" title="Cerrar Sesión">
+                        <i class="fa-solid fa-right-from-bracket text-base"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <div class="relative flex-1 max-w-md">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400"><i class="fa-solid fa-magnifying-glass"></i></span>
+                    <input type="text" id="searchInput" oninput="filterLinks()" placeholder="Buscar enlaces..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-xs transition">
+                </div>
+                <div id="categoryFilters" class="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
+                    <button onclick="filterCategory('all')" id="cat-all" class="category-pill active bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-xl transition whitespace-nowrap shadow-xs">Todos</button>
+                </div>
+            </div>
+
+            <div id="loadingState" class="text-center py-12">
+                <i class="fa-solid fa-circle-notch fa-spin text-blue-600 text-3xl mb-3"></i>
+                <p class="text-slate-500 text-sm">Sincronizando datos desde Firebase...</p>
+            </div>
+
+            <div id="contentContainer" class="space-y-8 hidden"></div>
+        </main>
+    </div>
+
+    <!-- MODAL NUEVO VÍNCULO -->
+    <div id="linkModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 border border-slate-100">
+            <div class="flex justify-between items-center mb-5">
+                <h3 id="linkModalTitle" class="text-lg font-bold text-slate-900">Agregar Nuevo Vínculo</h3>
+                <button onclick="closeLinkModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="linkForm" onsubmit="saveLink(event)" class="space-y-4">
+                <input type="hidden" id="linkId">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Título del Enlace</label>
+                    <input type="text" id="linkTitle" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600" placeholder="Ej. Matriz de Admisiones">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">URL / Enlace (Excel, OneDrive, etc.)</label>
+                    <input type="url" id="linkUrl" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600" placeholder="https://onedrive.live.com/...">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Carpeta</label>
+                        <select id="linkFolder" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Icono</label>
+                        <select id="linkIcon" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600">
+                            <option value="fa-file-excel">Excel / Hoja de Cálculo</option>
+                            <option value="fa-cloud">OneDrive / Nube</option>
+                            <option value="fa-folder-open">Carpeta General</option>
+                            <option value="fa-file-lines">Documento / Word</option>
+                            <option value="fa-globe">Sitio Web / Portal</option>
+                            <option value="fa-chart-pie">Reporte / Dashboard</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeLinkModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-md transition">Guardar en la Nube</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL NUEVA CARPETA -->
+    <div id="folderModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 border border-slate-100">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-lg font-bold text-slate-900">Nueva Carpeta</h3>
+                <button onclick="closeFolderModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="saveFolder(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Nombre de la Carpeta</label>
+                    <input type="text" id="folderNameInput" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600" placeholder="Ej. Admisiones 2026">
+                </div>
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button type="button" onclick="closeFolderModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-md transition">Crear Carpeta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPT DE APLICACIÓN Y CONEXIÓN A FIRESTORE -->
+    <script>
+        let folders = [];
+        let links = [];
+        let currentFilter = 'all';
+
+        window.addEventListener('firebase-ready', async () => {
+            await loadDataFromFirebase();
+            checkAuth();
+        });
+
+        async function loadDataFromFirebase() {
+            try {
+                // Cargar carpetas desde la colección aislada 'upana_central_enlaces' -> documento 'config_folders'
+                const folderSnap = await window.getDocs(window.collection(window.db, "upana_central_enlaces"));
+                
+                folders = [];
+                links = [];
+
+                folderSnap.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    if (docSnap.id === "config_folders" && data.list) {
+                        folders = data.list;
+                    } else if (docSnap.id !== "config_folders") {
+                        links.push({ id: docSnap.id, ...data });
+                    }
+                });
+
+                // Si está vacío por primera vez, creamos datos iniciales seguros
+                if (folders.length === 0) {
+                    folders = ["Admisiones", "Seguimiento Estudiantil", "OneDrive Institucional"];
+                    await window.setDoc(window.doc(window.db, "upana_central_enlaces", "config_folders"), { list: folders });
+                }
+
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('contentContainer').classList.remove('hidden');
+                renderApp();
+            } catch (error) {
+                console.error("Error al conectar con Firebase:", error);
+                document.getElementById('loadingState').innerHTML = `<p class="text-red-500 font-medium">Error al sincronizar con Firebase. Revisa la consola o permisos de Firestore.</p>`;
+            }
+        }
+
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const user = document.getElementById('userInput').value;
+            const pass = document.getElementById('passInput').value;
+
+            if (user === 'AdminUpana' && pass === 'Upana+0821') {
+                localStorage.setItem('upana_auth', 'true');
+                checkAuth();
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        });
+
+        function checkAuth() {
+            if (localStorage.getItem('upana_auth') === 'true') {
+                document.getElementById('loginView').classList.add('hidden');
+                document.getElementById('appView').classList.remove('hidden');
+            } else {
+                document.getElementById('loginView').classList.remove('hidden');
+                document.getElementById('appView').classList.add('hidden');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('upana_auth');
+            checkAuth();
+        }
+
+        function renderApp() {
+            renderCategoryFilters();
+            renderFolderSelect();
+            renderLinks();
+        }
+
+        function renderCategoryFilters() {
+            const container = document.getElementById('categoryFilters');
+            let html = `<button onclick="filterCategory('all')" id="cat-all" class="category-pill ${currentFilter === 'all' ? 'bg-blue-600 text-white shadow-xs' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'} text-xs font-semibold px-4 py-2 rounded-xl transition whitespace-nowrap">Todos</button>`;
+            
+            folders.forEach(folder => {
+                const isActive = currentFilter === folder;
+                html += `<button onclick="filterCategory('${folder}')" id="cat-${folder}" class="category-pill ${isActive ? 'bg-blue-600 text-white shadow-xs' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'} text-xs font-semibold px-4 py-2 rounded-xl transition whitespace-nowrap">${folder}</button>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function filterCategory(category) {
+            currentFilter = category;
+            renderCategoryFilters();
+            renderLinks();
+        }
+
+        function renderFolderSelect() {
+            const select = document.getElementById('linkFolder');
+            select.innerHTML = '';
+            folders.forEach(folder => {
+                select.innerHTML += `<option value="${folder}">${folder}</option>`;
+            });
+        }
+
+        function renderLinks() {
+            const container = document.getElementById('contentContainer');
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+
+            let filtered = links.filter(link => {
+                const matchesSearch = link.title.toLowerCase().includes(searchQuery) || link.folder.toLowerCase().includes(searchQuery);
+                const matchesCategory = currentFilter === 'all' || link.folder === currentFilter;
+                return matchesSearch && matchesCategory;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-16 bg-white rounded-2xl border border-slate-200 shadow-xs">
+                        <div class="text-slate-300 text-4xl mb-3"><i class="fa-solid fa-folder-open"></i></div>
+                        <p class="text-slate-600 font-medium">No se encontraron vínculos.</p>
+                    </div>`;
+                return;
+            }
+
+            const groups = {};
+            filtered.forEach(link => {
+                if (!groups[link.folder]) groups[link.folder] = [];
+                groups[link.folder].push(link);
+            });
+
+            let html = '';
+            for (const [folderName, folderLinks] of Object.entries(groups)) {
+                html += `
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                        <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+                            <div class="flex items-center space-x-2.5">
+                                <span class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-sm"><i class="fa-solid fa-folder"></i></span>
+                                <h2 class="font-bold text-slate-800 text-base">${folderName}</h2>
+                                <span class="bg-slate-200/70 text-slate-600 text-xs font-semibold px-2.5 py-0.5 rounded-full">${folderLinks.length}</span>
+                            </div>
+                            <button onclick="deleteFolder('${folderName}')" class="text-slate-400 hover:text-red-600 text-xs transition" title="Eliminar Carpeta"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                        <div class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                `;
+
+                folderLinks.forEach((link) => {
+                    let iconColor = "bg-emerald-50 text-emerald-600";
+                    if(link.icon.includes('cloud')) iconColor = "bg-sky-50 text-sky-600";
+                    if(link.icon.includes('globe')) iconColor = "bg-indigo-50 text-indigo-600";
+                    if(link.icon.includes('chart')) iconColor = "bg-amber-50 text-amber-600";
+
+                    html += `
+                        <div class="group relative bg-slate-50/70 hover:bg-white border border-slate-200 hover:border-blue-300 rounded-xl p-4 transition duration-200 shadow-xs hover:shadow-md flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="w-10 h-10 rounded-xl ${iconColor} flex items-center justify-center text-base shadow-xs">
+                                        <i class="fa-solid ${link.icon}"></i>
+                                    </div>
+                                    <div class="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition">
+                                        <button onclick="editLink('${link.id}')" class="text-slate-400 hover:text-blue-600 p-1.5" title="Editar"><i class="fa-solid fa-pen text-xs"></i></button>
+                                        <button onclick="deleteLink('${link.id}')" class="text-slate-400 hover:text-red-600 p-1.5" title="Eliminar"><i class="fa-solid fa-trash text-xs"></i></button>
+                                    </div>
+                                </div>
+                                <h3 class="font-semibold text-slate-800 text-sm mb-1 line-clamp-2">${link.title}</h3>
+                                <p class="text-xs text-slate-400 truncate mb-4">${link.url}</p>
+                            </div>
+                            <a href="${link.url}" target="_blank" class="inline-flex items-center justify-center space-x-1.5 w-full bg-white hover:bg-blue-600 border border-slate-200 hover:border-blue-600 text-slate-700 hover:text-white text-xs font-semibold py-2 px-3 rounded-lg transition shadow-xs">
+                                <span>Abrir enlace</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                            </a>
+                        </div>
+                    `;
+                });
+                html += `</div></div>`;
+            }
+            container.innerHTML = html;
+        }
+
+        function filterLinks() { renderLinks(); }
+
+        function openLinkModal() {
+            document.getElementById('linkModalTitle').innerText = "Agregar Nuevo Vínculo";
+            document.getElementById('linkForm').reset();
+            document.getElementById('linkId').value = "";
+            document.getElementById('linkModal').classList.remove('hidden');
+        }
+
+        function closeLinkModal() { document.getElementById('linkModal').classList.add('hidden'); }
+        function openFolderModal() { document.getElementById('folderNameInput').value = ""; document.getElementById('folderModal').classList.remove('hidden'); }
+        function closeFolderModal() { document.getElementById('folderModal').classList.add('hidden'); }
+
+        async function saveLink(e) {
+            e.preventDefault();
+            const id = document.getElementById('linkId').value || "link_" + Date.now();
+            const title = document.getElementById('linkTitle').value;
+            const url = document.getElementById('linkUrl').value;
+            const folder = document.getElementById('linkFolder').value;
+            const icon = document.getElementById('linkIcon').value;
+
+            const linkData = { title, url, folder, icon };
+            await window.setDoc(window.doc(window.db, "upana_central_enlaces", id), linkData);
+            
+            closeLinkModal();
+            await loadDataFromFirebase();
+        }
+
+        async function editLink(id) {
+            const link = links.find(l => l.id === id);
+            if (!link) return;
+            document.getElementById('linkModalTitle').innerText = "Editar Vínculo";
+            document.getElementById('linkId').value = link.id;
+            document.getElementById('linkTitle').value = link.title;
+            document.getElementById('linkUrl').value = link.url;
+            document.getElementById('linkFolder').value = link.folder;
+            document.getElementById('linkIcon').value = link.icon;
+            document.getElementById('linkModal').classList.remove('hidden');
+        }
+
+        async function deleteLink(id) {
+            if (confirm("¿Deseas eliminar este vínculo de Firebase?")) {
+                await window.deleteDoc(window.doc(window.db, "upana_central_enlaces", id));
+                await loadDataFromFirebase();
+            }
+        }
+
+        async function saveFolder(e) {
+            e.preventDefault();
+            const folderName = document.getElementById('folderNameInput').value.trim();
+            if (folderName && !folders.includes(folderName)) {
+                folders.push(folderName);
+                await window.setDoc(window.doc(window.db, "upana_central_enlaces", "config_folders"), { list: folders });
+                closeFolderModal();
+                await loadDataFromFirebase();
+            } else {
+                alert("La carpeta ya existe o no es válida.");
+            }
+        }
+
+        async function deleteFolder(folderName) {
+            if (confirm(`¿Deseas eliminar la carpeta "${folderName}" y sus enlaces asociados?`)) {
+                folders = folders.filter(f => f !== folderName);
+                await window.setDoc(window.doc(window.db, "upana_central_enlaces", "config_folders"), { list: folders });
+                
+                // Eliminar links de esa carpeta
+                for (const link of links.filter(l => l.folder === folderName)) {
+                    await window.deleteDoc(window.doc(window.db, "upana_central_enlaces", link.id));
+                }
+
+                if (currentFilter === folderName) currentFilter = 'all';
+                await loadDataFromFirebase();
+            }
+        }
+    </script>
+</body>
+</html>
