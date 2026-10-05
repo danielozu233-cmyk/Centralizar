@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centralizador de Enlaces - UPANA (Microsoft Auth)</title>
+    <title>UPANA Cloud Hub — Portal Institucional</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
@@ -47,7 +47,6 @@
             tenant: "b13b704f-c405-40bf-bdd1-2f2e151a21b0"
         });
 
-        // Exponer funciones globales
         window.auth = auth;
         window.db = db;
         window.provider = provider;
@@ -65,110 +64,130 @@
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+        }
+        .apple-glass {
+            background: rgba(255, 255, 255, 0.82);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .apple-card {
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .apple-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.08);
+        }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col selection:bg-blue-500 selection:text-white">
 
-    <!-- ================= VISTA DE LOGIN CON MICROSOFT ================= -->
-    <div id="loginView" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 border border-slate-100 text-center">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 text-blue-600 text-2xl mb-4 shadow-inner">
-                <i class="fa-solid fa-cloud-arrow-up"></i>
+    <!-- ================= VISTA DE LOGIN ESTILO APPLE ================= -->
+    <div id="loginView" class="fixed inset-0 bg-[#f5f5f7] z-50 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-[radial-gradient(#e5e5e7_1px,transparent_1px)] [background-size:16px_16px] opacity-60"></div>
+        
+        <div class="relative apple-glass border border-white/80 rounded-3xl shadow-[0_30px_90px_rgba(0,0,0,0.06)] max-w-md w-full p-10 text-center">
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-tr from-slate-900 to-slate-800 text-white text-3xl mb-6 shadow-xl shadow-slate-900/10">
+                <i class="fa-solid fa-layer-group"></i>
             </div>
-            <h1 class="text-2xl font-bold text-slate-900">Portal UPANA Cloud</h1>
-            <p class="text-sm text-slate-500 mt-1 mb-8">Inicia sesión con tu cuenta institucional de Microsoft</p>
+            <h1 class="text-3xl font-semibold tracking-tight text-[#1d1d1f]">UPANA Hub</h1>
+            <p class="text-sm text-[#86868b] mt-2 mb-8">Centralizador Institucional Exclusivo</p>
             
-            <div id="loginError" class="hidden text-xs text-red-500 font-medium mb-4 bg-red-50 py-2 rounded-lg"></div>
+            <div id="loginError" class="hidden text-xs text-red-600 font-medium mb-5 bg-red-50/80 border border-red-100 p-3 rounded-xl"></div>
 
-            <button onclick="loginWithMicrosoft()" class="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl shadow-lg flex items-center justify-center space-x-3 transition duration-200">
-                <!-- Icono oficial de Microsoft -->
+            <button onclick="loginWithMicrosoft()" class="w-full py-4 px-6 bg-[#1d1d1f] hover:bg-black text-white text-sm font-medium rounded-2xl shadow-lg shadow-slate-900/15 flex items-center justify-center space-x-3 transition-all duration-300 active:scale-[0.98]">
                 <svg class="w-5 h-5" viewBox="0 0 21 21">
                     <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
                     <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
                     <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
                     <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
                 </svg>
-                <span>Iniciar sesión con Microsoft</span>
+                <span>Acceder con Microsoft 365</span>
             </button>
+            <p class="text-[11px] text-[#86868b] mt-6">Acceso restringido a cuentas autorizadas</p>
         </div>
     </div>
 
     <!-- ================= VISTA PRINCIPAL ================= -->
     <div id="appView" class="hidden flex-1 flex flex-col">
-        <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-blue-600/20">
+        <!-- Header estilo Apple Glass -->
+        <header class="apple-glass border-b border-black/[0.06] sticky top-0 z-30">
+            <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-blue-500/20">
                         U
                     </div>
                     <div>
-                        <span class="font-bold text-slate-900 text-lg block leading-tight">Centralizador UPANA Cloud</span>
-                        <span id="userEmailBadge" class="text-xs text-slate-500">Conectado</span>
+                        <span class="font-semibold text-[#1d1d1f] text-base tracking-tight block">UPANA Cloud Hub</span>
+                        <span id="userEmailBadge" class="text-xs text-[#86868b] font-medium">Verificando sesión...</span>
                     </div>
                 </div>
                 <div class="flex items-center space-x-3">
-                    <button onclick="openFolderModal()" class="inline-flex items-center space-x-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-4 py-2.5 rounded-xl transition">
+                    <button onclick="openFolderModal()" class="inline-flex items-center space-x-2 bg-black/[0.04] hover:bg-black/[0.08] text-[#1d1d1f] text-xs font-semibold px-4 py-2.5 rounded-xl transition-all">
                         <i class="fa-solid fa-folder-plus text-blue-600"></i>
                         <span>Nueva Carpeta</span>
                     </button>
-                    <button onclick="openLinkModal()" class="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-sm transition">
+                    <button onclick="openLinkModal()" class="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-blue-600/20 transition-all">
                         <i class="fa-solid fa-plus"></i>
                         <span>Nuevo Vínculo</span>
                     </button>
-                    <div class="h-6 w-px bg-slate-200 mx-1"></div>
-                    <button onclick="logout()" class="text-slate-400 hover:text-red-600 p-2 rounded-lg transition" title="Cerrar Sesión">
-                        <i class="fa-solid fa-right-from-bracket text-base"></i>
+                    <div class="h-5 w-px bg-black/10 mx-1"></div>
+                    <button onclick="logout()" class="text-[#86868b] hover:text-red-600 p-2.5 rounded-xl hover:bg-red-50 transition-all" title="Cerrar Sesión">
+                        <i class="fa-solid fa-right-from-bracket text-sm"></i>
                     </button>
                 </div>
             </div>
         </header>
 
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <!-- Contenido -->
+        <main class="max-w-7xl mx-auto px-6 py-10 flex-1 w-full">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
                 <div class="relative flex-1 max-w-md">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400"><i class="fa-solid fa-magnifying-glass"></i></span>
-                    <input type="text" id="searchInput" oninput="filterLinks()" placeholder="Buscar enlaces..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-xs transition">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-[#86868b]"><i class="fa-solid fa-magnifying-glass text-sm"></i></span>
+                    <input type="text" id="searchInput" oninput="filterLinks()" placeholder="Buscar recursos, Excel, OneDrive..." class="w-full pl-11 pr-4 py-3 bg-white/80 border border-black/10 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white shadow-xs transition-all">
                 </div>
                 <div id="categoryFilters" class="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
-                    <button onclick="filterCategory('all')" id="cat-all" class="category-pill active bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-xl transition whitespace-nowrap shadow-xs">Todos</button>
+                    <button onclick="filterCategory('all')" id="cat-all" class="category-pill active bg-[#1d1d1f] text-white text-xs font-medium px-4 py-2.5 rounded-xl transition-all shadow-xs whitespace-nowrap">Todos</button>
                 </div>
             </div>
 
-            <div id="loadingState" class="text-center py-12">
+            <div id="loadingState" class="text-center py-20">
                 <i class="fa-solid fa-circle-notch fa-spin text-blue-600 text-3xl mb-3"></i>
-                <p class="text-slate-500 text-sm">Sincronizando datos desde Firebase...</p>
+                <p class="text-[#86868b] text-sm">Sincronizando con Firebase...</p>
             </div>
 
-            <div id="contentContainer" class="space-y-8 hidden"></div>
+            <div id="contentContainer" class="space-y-10 hidden"></div>
         </main>
     </div>
 
     <!-- MODAL NUEVO VÍNCULO -->
-    <div id="linkModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 border border-slate-100">
-            <div class="flex justify-between items-center mb-5">
-                <h3 id="linkModalTitle" class="text-lg font-bold text-slate-900">Agregar Nuevo Vínculo</h3>
-                <button onclick="closeLinkModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+    <div id="linkModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-8 border border-black/5 animate-in fade-in zoom-in-95 duration-200">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="linkModalTitle" class="text-xl font-semibold text-[#1d1d1f]">Agregar Nuevo Vínculo</h3>
+                <button onclick="closeLinkModal()" class="text-[#86868b] hover:text-[#1d1d1f] w-8 h-8 rounded-full bg-black/5 flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <form id="linkForm" onsubmit="saveLink(event)" class="space-y-4">
+            <form id="linkForm" onsubmit="saveLink(event)" class="space-y-5">
                 <input type="hidden" id="linkId">
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Título del Enlace</label>
-                    <input type="text" id="linkTitle" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600" placeholder="Ej. Matriz de Admisiones">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-[#86868b] mb-2">Título del Enlace</label>
+                    <input type="text" id="linkTitle" required class="w-full px-4 py-3 bg-[#f5f5f7] border border-black/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition" placeholder="Ej. Matriz de Admisiones">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">URL / Enlace (Excel, OneDrive, etc.)</label>
-                    <input type="url" id="linkUrl" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600" placeholder="https://onedrive.live.com/...">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-[#86868b] mb-2">URL (Excel, OneDrive, etc.)</label>
+                    <input type="url" id="linkUrl" required class="w-full px-4 py-3 bg-[#f5f5f7] border border-black/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition" placeholder="https://onedrive.live.com/...">
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Carpeta</label>
-                        <select id="linkFolder" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"></select>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-[#86868b] mb-2">Carpeta</label>
+                        <select id="linkFolder" required class="w-full px-4 py-3 bg-[#f5f5f7] border border-black/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition"></select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Icono</label>
-                        <select id="linkIcon" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-[#86868b] mb-2">Icono</label>
+                        <select id="linkIcon" class="w-full px-4 py-3 bg-[#f5f5f7] border border-black/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition">
                             <option value="fa-file-excel">Excel / Hoja de Cálculo</option>
                             <option value="fa-cloud">OneDrive / Nube</option>
                             <option value="fa-folder-open">Carpeta General</option>
@@ -179,35 +198,42 @@
                     </div>
                 </div>
                 <div class="flex justify-end space-x-3 pt-4">
-                    <button type="button" onclick="closeLinkModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">Cancelar</button>
-                    <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-md transition">Guardar en la Nube</button>
+                    <button type="button" onclick="closeLinkModal()" class="px-5 py-3 bg-[#f5f5f7] hover:bg-black/10 text-[#1d1d1f] text-xs font-semibold rounded-xl transition">Cancelar</button>
+                    <button type="submit" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-lg shadow-blue-600/20 transition">Guardar Vínculo</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- MODAL NUEVA CARPETA -->
-    <div id="folderModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 border border-slate-100">
-            <div class="flex justify-between items-center mb-5">
-                <h3 class="text-lg font-bold text-slate-900">Nueva Carpeta</h3>
-                <button onclick="closeFolderModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+    <div id="folderModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-8 border border-black/5 animate-in fade-in zoom-in-95 duration-200">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold text-[#1d1d1f]">Nueva Carpeta</h3>
+                <button onclick="closeFolderModal()" class="text-[#86868b] hover:text-[#1d1d1f] w-8 h-8 rounded-full bg-black/5 flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <form onsubmit="saveFolder(event)" class="space-y-4">
+            <form onsubmit="saveFolder(event)" class="space-y-5">
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Nombre de la Carpeta</label>
-                    <input type="text" id="folderNameInput" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600" placeholder="Ej. Admisiones 2026">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-[#86868b] mb-2">Nombre de la Carpeta</label>
+                    <input type="text" id="folderNameInput" required class="w-full px-4 py-3 bg-[#f5f5f7] border border-black/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition" placeholder="Ej. Admisiones 2026">
                 </div>
                 <div class="flex justify-end space-x-3 pt-2">
-                    <button type="button" onclick="closeFolderModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">Cancelar</button>
-                    <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-md transition">Crear Carpeta</button>
+                    <button type="button" onclick="closeFolderModal()" class="px-5 py-3 bg-[#f5f5f7] hover:bg-black/10 text-[#1d1d1f] text-xs font-semibold rounded-xl transition">Cancelar</button>
+                    <button type="submit" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-lg shadow-blue-600/20 transition">Crear</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- SCRIPT DE LÓGICA Y AUTENTICACIÓN MICROSOFT -->
+    <!-- SCRIPT DE LÓGICA Y SEGURIDAD -->
     <script>
+        // Correos estrictamente autorizados
+        const ALLOWED_EMAILS = [
+            "nozuna@upana.edu.gt",
+            "ccoyoy@upana.edu.gt",
+            "jmjuarez@upana.edu.gt"
+        ];
+
         let folders = [];
         let links = [];
         let currentFilter = 'all';
@@ -215,13 +241,20 @@
         window.addEventListener('firebase-ready', () => {
             window.onAuthStateChanged(window.auth, async (user) => {
                 if (user) {
-                    // Usuario autenticado con Microsoft
+                    const userEmail = (user.email || "").toLowerCase();
+                    
+                    // Validar si el correo está autorizado
+                    if (!ALLOWED_EMAILS.includes(userEmail)) {
+                        alert("Acceso denegado. Tu cuenta de correo no está autorizada para ingresar a este portal.");
+                        await window.signOut(window.auth);
+                        return;
+                    }
+
                     document.getElementById('loginView').classList.add('hidden');
                     document.getElementById('appView').classList.remove('hidden');
-                    document.getElementById('userEmailBadge').innerText = user.email || user.displayName || 'Administrador UPANA';
+                    document.getElementById('userEmailBadge').innerText = userEmail;
                     await loadDataFromFirebase();
                 } else {
-                    // No autenticado
                     document.getElementById('loginView').classList.remove('hidden');
                     document.getElementById('appView').classList.add('hidden');
                 }
@@ -233,9 +266,9 @@
                 document.getElementById('loginError').classList.add('hidden');
                 await window.signInWithPopup(window.auth, window.provider);
             } catch (error) {
-                console.error("Error en autenticación Microsoft:", error);
+                console.error("Error en autenticación:", error);
                 const errDiv = document.getElementById('loginError');
-                errDiv.innerText = "Error al iniciar sesión: " + error.message;
+                errDiv.innerText = "Error al autenticar: " + error.message;
                 errDiv.classList.remove('hidden');
             }
         }
@@ -270,7 +303,7 @@
                 renderApp();
             } catch (error) {
                 console.error("Error al cargar datos:", error);
-                document.getElementById('loadingState').innerHTML = `<p class="text-red-500 font-medium">Error al cargar desde Firebase. Verifica tus reglas de Firestore.</p>`;
+                document.getElementById('loadingState').innerHTML = `<p class="text-red-500 font-medium">Error al sincronizar con Firebase.</p>`;
             }
         }
 
@@ -282,11 +315,11 @@
 
         function renderCategoryFilters() {
             const container = document.getElementById('categoryFilters');
-            let html = `<button onclick="filterCategory('all')" id="cat-all" class="category-pill ${currentFilter === 'all' ? 'bg-blue-600 text-white shadow-xs' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'} text-xs font-semibold px-4 py-2 rounded-xl transition whitespace-nowrap">Todos</button>`;
+            let html = `<button onclick="filterCategory('all')" id="cat-all" class="category-pill ${currentFilter === 'all' ? 'bg-[#1d1d1f] text-white shadow-xs' : 'bg-white/80 border border-black/10 text-[#1d1d1f] hover:bg-black/5'} text-xs font-medium px-4 py-2.5 rounded-xl transition-all whitespace-nowrap">Todos</button>`;
             
             folders.forEach(folder => {
                 const isActive = currentFilter === folder;
-                html += `<button onclick="filterCategory('${folder}')" id="cat-${folder}" class="category-pill ${isActive ? 'bg-blue-600 text-white shadow-xs' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'} text-xs font-semibold px-4 py-2 rounded-xl transition whitespace-nowrap">${folder}</button>`;
+                html += `<button onclick="filterCategory('${folder}')" id="cat-${folder}" class="category-pill ${isActive ? 'bg-[#1d1d1f] text-white shadow-xs' : 'bg-white/80 border border-black/10 text-[#1d1d1f] hover:bg-black/5'} text-xs font-medium px-4 py-2.5 rounded-xl transition-all whitespace-nowrap">${folder}</button>`;
             });
             container.innerHTML = html;
         }
@@ -317,9 +350,9 @@
 
             if (filtered.length === 0) {
                 container.innerHTML = `
-                    <div class="text-center py-16 bg-white rounded-2xl border border-slate-200 shadow-xs">
-                        <div class="text-slate-300 text-4xl mb-3"><i class="fa-solid fa-folder-open"></i></div>
-                        <p class="text-slate-600 font-medium">No se encontraron vínculos.</p>
+                    <div class="text-center py-20 bg-white/60 backdrop-blur-md rounded-3xl border border-black/5 shadow-xs">
+                        <div class="text-[#86868b] text-4xl mb-3"><i class="fa-regular fa-folder-open"></i></div>
+                        <p class="text-[#1d1d1f] font-medium">No se encontraron vínculos registrados.</p>
                     </div>`;
                 return;
             }
@@ -333,16 +366,16 @@
             let html = '';
             for (const [folderName, folderLinks] of Object.entries(groups)) {
                 html += `
-                    <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-                        <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-                            <div class="flex items-center space-x-2.5">
-                                <span class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-sm"><i class="fa-solid fa-folder"></i></span>
-                                <h2 class="font-bold text-slate-800 text-base">${folderName}</h2>
-                                <span class="bg-slate-200/70 text-slate-600 text-xs font-semibold px-2.5 py-0.5 rounded-full">${folderLinks.length}</span>
+                    <div class="bg-white/80 backdrop-blur-md rounded-3xl border border-black/[0.06] shadow-xs overflow-hidden">
+                        <div class="bg-black/[0.02] px-8 py-5 border-b border-black/[0.04] flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <span class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-sm shadow-inner"><i class="fa-solid fa-folder-closed"></i></span>
+                                <h2 class="font-semibold text-[#1d1d1f] text-base">${folderName}</h2>
+                                <span class="bg-black/5 text-[#86868b] text-xs font-semibold px-2.5 py-0.5 rounded-full">${folderLinks.length}</span>
                             </div>
-                            <button onclick="deleteFolder('${folderName}')" class="text-slate-400 hover:text-red-600 text-xs transition" title="Eliminar Carpeta"><i class="fa-solid fa-trash-can"></i></button>
+                            <button onclick="deleteFolder('${folderName}')" class="text-[#86868b] hover:text-red-600 text-xs transition p-2 rounded-lg hover:bg-red-50" title="Eliminar Carpeta"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
-                        <div class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 `;
 
                 folderLinks.forEach((link) => {
@@ -352,22 +385,22 @@
                     if(link.icon.includes('chart')) iconColor = "bg-amber-50 text-amber-600";
 
                     html += `
-                        <div class="group relative bg-slate-50/70 hover:bg-white border border-slate-200 hover:border-blue-300 rounded-xl p-4 transition duration-200 shadow-xs hover:shadow-md flex flex-col justify-between">
+                        <div class="apple-card group relative bg-[#f5f5f7]/60 hover:bg-white border border-black/5 hover:border-blue-500/30 rounded-2xl p-5 flex flex-col justify-between">
                             <div>
-                                <div class="flex items-start justify-between mb-3">
-                                    <div class="w-10 h-10 rounded-xl ${iconColor} flex items-center justify-center text-base shadow-xs">
+                                <div class="flex items-start justify-between mb-4">
+                                    <div class="w-12 h-12 rounded-2xl ${iconColor} flex items-center justify-center text-lg shadow-sm">
                                         <i class="fa-solid ${link.icon}"></i>
                                     </div>
-                                    <div class="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition">
-                                        <button onclick="editLink('${link.id}')" class="text-slate-400 hover:text-blue-600 p-1.5" title="Editar"><i class="fa-solid fa-pen text-xs"></i></button>
-                                        <button onclick="deleteLink('${link.id}')" class="text-slate-400 hover:text-red-600 p-1.5" title="Eliminar"><i class="fa-solid fa-trash text-xs"></i></button>
+                                    <div class="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onclick="editLink('${link.id}')" class="text-[#86868b] hover:text-blue-600 p-2 rounded-lg hover:bg-blue-50 transition" title="Editar"><i class="fa-solid fa-pen text-xs"></i></button>
+                                        <button onclick="deleteLink('${link.id}')" class="text-[#86868b] hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition" title="Eliminar"><i class="fa-solid fa-trash text-xs"></i></button>
                                     </div>
                                 </div>
-                                <h3 class="font-semibold text-slate-800 text-sm mb-1 line-clamp-2">${link.title}</h3>
-                                <p class="text-xs text-slate-400 truncate mb-4">${link.url}</p>
+                                <h3 class="font-semibold text-[#1d1d1f] text-sm mb-1.5 line-clamp-2 tracking-tight">${link.title}</h3>
+                                <p class="text-xs text-[#86868b] truncate mb-6">${link.url}</p>
                             </div>
-                            <a href="${link.url}" target="_blank" class="inline-flex items-center justify-center space-x-1.5 w-full bg-white hover:bg-blue-600 border border-slate-200 hover:border-blue-600 text-slate-700 hover:text-white text-xs font-semibold py-2 px-3 rounded-lg transition shadow-xs">
-                                <span>Abrir enlace</span>
+                            <a href="${link.url}" target="_blank" class="inline-flex items-center justify-center space-x-2 w-full bg-white hover:bg-[#1d1d1f] border border-black/10 hover:border-transparent text-[#1d1d1f] hover:text-white text-xs font-semibold py-3 px-4 rounded-xl transition-all shadow-xs">
+                                <span>Abrir recurso</span>
                                 <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
                             </a>
                         </div>
@@ -427,9 +460,11 @@
 
         async function saveFolder(e) {
             e.preventDefault();
-            const folderName = document.getElementById('folderNameInput').value.trim();
-            if (folderName && !folders.includes(folderName)) {
-                folders.push(folderName);
+            const folderName = document.getElementById('folderNameInput5' || 'folderNameInput').value.trim();
+            // Corrección limpia de input
+            const folderInputVal = document.getElementById('folderNameInput').value.trim();
+            if (folderInputVal && !folders.includes(folderInputVal)) {
+                folders.push(folderInputVal);
                 await window.setDoc(window.doc(window.db, "upana_central_enlaces", "config_folders"), { list: folders });
                 closeFolderModal();
                 await loadDataFromFirebase();
