@@ -3,18 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centralizador de Enlaces - UPANA (Cloud)</title>
+    <title>Centralizador de Enlaces - UPANA (Microsoft Auth)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Firebase SDK (Modular v10) -->
+    <!-- Firebase SDK (v10.12.2) -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import {
+            getAuth,
+            OAuthProvider,
+            signInWithPopup,
+            signOut,
+            onAuthStateChanged
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import {
+            getFirestore,
+            collection,
+            doc,
+            setDoc,
+            getDocs,
+            deleteDoc
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-        // Configuración de tu Firebase (Aislado en la colección upana_central_enlaces)
         const firebaseConfig = {
             apiKey: "AIzaSyCKRB49LOhaR79NI8CwypqCMf_10GHd77k",
             authDomain: "reports-e956a.firebaseapp.com",
@@ -26,17 +39,27 @@
         };
 
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Exponer funciones globales para la app
+        const provider = new OAuthProvider("microsoft.com");
+        provider.setCustomParameters({
+            tenant: "b13b704f-c405-40bf-bdd1-2f2e151a21b0"
+        });
+
+        // Exponer funciones globales
+        window.auth = auth;
         window.db = db;
+        window.provider = provider;
+        window.signInWithPopup = signInWithPopup;
+        window.signOut = signOut;
+        window.onAuthStateChanged = onAuthStateChanged;
         window.collection = collection;
-        window.getDocs = getDocs;
         window.doc = doc;
         window.setDoc = setDoc;
+        window.getDocs = getDocs;
         window.deleteDoc = deleteDoc;
 
-        // Disparar carga inicial una vez cargado Firebase
         window.dispatchEvent(new Event('firebase-ready'));
     </script>
 
@@ -47,36 +70,27 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
-    <!-- ================= VISTA DE LOGIN ================= -->
+    <!-- ================= VISTA DE LOGIN CON MICROSOFT ================= -->
     <div id="loginView" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 border border-slate-100">
-            <div class="text-center mb-8">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 text-blue-600 text-2xl mb-4 shadow-inner">
-                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                </div>
-                <h1 class="text-2xl font-bold text-slate-900">Portal UPANA (Cloud)</h1>
-                <p class="text-sm text-slate-500 mt-1">Sincronizado con Firebase</p>
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 border border-slate-100 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 text-blue-600 text-2xl mb-4 shadow-inner">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
             </div>
-            <form id="loginForm" class="space-y-5">
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">Usuario</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400"><i class="fa-solid fa-user"></i></span>
-                        <input type="text" id="userInput" required class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 transition" placeholder="Ej. AdminUpana">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">Contraseña</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400"><i class="fa-solid fa-lock"></i></span>
-                        <input type="password" id="passInput" required class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 transition" placeholder="••••••••••">
-                    </div>
-                </div>
-                <div id="loginError" class="hidden text-xs text-red-500 font-medium text-center bg-red-50 py-2 rounded-lg">Usuario o contraseña incorrectos</div>
-                <button type="submit" class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-600/25 transition duration-200">
-                    Iniciar Sesión
-                </button>
-            </form>
+            <h1 class="text-2xl font-bold text-slate-900">Portal UPANA Cloud</h1>
+            <p class="text-sm text-slate-500 mt-1 mb-8">Inicia sesión con tu cuenta institucional de Microsoft</p>
+            
+            <div id="loginError" class="hidden text-xs text-red-500 font-medium mb-4 bg-red-50 py-2 rounded-lg"></div>
+
+            <button onclick="loginWithMicrosoft()" class="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl shadow-lg flex items-center justify-center space-x-3 transition duration-200">
+                <!-- Icono oficial de Microsoft -->
+                <svg class="w-5 h-5" viewBox="0 0 21 21">
+                    <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+                    <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+                    <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+                    <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+                </svg>
+                <span>Iniciar sesión con Microsoft</span>
+            </button>
         </div>
     </div>
 
@@ -90,7 +104,7 @@
                     </div>
                     <div>
                         <span class="font-bold text-slate-900 text-lg block leading-tight">Centralizador UPANA Cloud</span>
-                        <span class="text-xs text-slate-500">Datos seguros en Firebase (`reports-e956a`)</span>
+                        <span id="userEmailBadge" class="text-xs text-slate-500">Conectado</span>
                     </div>
                 </div>
                 <div class="flex items-center space-x-3">
@@ -192,20 +206,46 @@
         </div>
     </div>
 
-    <!-- SCRIPT DE APLICACIÓN Y CONEXIÓN A FIRESTORE -->
+    <!-- SCRIPT DE LÓGICA Y AUTENTICACIÓN MICROSOFT -->
     <script>
         let folders = [];
         let links = [];
         let currentFilter = 'all';
 
-        window.addEventListener('firebase-ready', async () => {
-            await loadDataFromFirebase();
-            checkAuth();
+        window.addEventListener('firebase-ready', () => {
+            window.onAuthStateChanged(window.auth, async (user) => {
+                if (user) {
+                    // Usuario autenticado con Microsoft
+                    document.getElementById('loginView').classList.add('hidden');
+                    document.getElementById('appView').classList.remove('hidden');
+                    document.getElementById('userEmailBadge').innerText = user.email || user.displayName || 'Administrador UPANA';
+                    await loadDataFromFirebase();
+                } else {
+                    // No autenticado
+                    document.getElementById('loginView').classList.remove('hidden');
+                    document.getElementById('appView').classList.add('hidden');
+                }
+            });
         });
+
+        async function loginWithMicrosoft() {
+            try {
+                document.getElementById('loginError').classList.add('hidden');
+                await window.signInWithPopup(window.auth, window.provider);
+            } catch (error) {
+                console.error("Error en autenticación Microsoft:", error);
+                const errDiv = document.getElementById('loginError');
+                errDiv.innerText = "Error al iniciar sesión: " + error.message;
+                errDiv.classList.remove('hidden');
+            }
+        }
+
+        async function logout() {
+            await window.signOut(window.auth);
+        }
 
         async function loadDataFromFirebase() {
             try {
-                // Cargar carpetas desde la colección aislada 'upana_central_enlaces' -> documento 'config_folders'
                 const folderSnap = await window.getDocs(window.collection(window.db, "upana_central_enlaces"));
                 
                 folders = [];
@@ -220,7 +260,6 @@
                     }
                 });
 
-                // Si está vacío por primera vez, creamos datos iniciales seguros
                 if (folders.length === 0) {
                     folders = ["Admisiones", "Seguimiento Estudiantil", "OneDrive Institucional"];
                     await window.setDoc(window.doc(window.db, "upana_central_enlaces", "config_folders"), { list: folders });
@@ -230,38 +269,9 @@
                 document.getElementById('contentContainer').classList.remove('hidden');
                 renderApp();
             } catch (error) {
-                console.error("Error al conectar con Firebase:", error);
-                document.getElementById('loadingState').innerHTML = `<p class="text-red-500 font-medium">Error al sincronizar con Firebase. Revisa la consola o permisos de Firestore.</p>`;
+                console.error("Error al cargar datos:", error);
+                document.getElementById('loadingState').innerHTML = `<p class="text-red-500 font-medium">Error al cargar desde Firebase. Verifica tus reglas de Firestore.</p>`;
             }
-        }
-
-        // Login
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const user = document.getElementById('userInput').value;
-            const pass = document.getElementById('passInput').value;
-
-            if (user === 'AdminUpana' && pass === 'Upana+0821') {
-                localStorage.setItem('upana_auth', 'true');
-                checkAuth();
-            } else {
-                document.getElementById('loginError').classList.remove('hidden');
-            }
-        });
-
-        function checkAuth() {
-            if (localStorage.getItem('upana_auth') === 'true') {
-                document.getElementById('loginView').classList.add('hidden');
-                document.getElementById('appView').classList.remove('hidden');
-            } else {
-                document.getElementById('loginView').classList.remove('hidden');
-                document.getElementById('appView').classList.add('hidden');
-            }
-        }
-
-        function logout() {
-            localStorage.removeItem('upana_auth');
-            checkAuth();
         }
 
         function renderApp() {
@@ -433,7 +443,6 @@
                 folders = folders.filter(f => f !== folderName);
                 await window.setDoc(window.doc(window.db, "upana_central_enlaces", "config_folders"), { list: folders });
                 
-                // Eliminar links de esa carpeta
                 for (const link of links.filter(l => l.folder === folderName)) {
                     await window.deleteDoc(window.doc(window.db, "upana_central_enlaces", link.id));
                 }
